@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useProfile } from "./ProfileContext";
 import axios from "axios";
-import { FaBell } from "react-icons/fa";
 import { MdExpandMore, MdChevronRight } from "react-icons/md";
 
 // Dashboard components
@@ -14,94 +13,93 @@ import Calender from "./Calender";
 import TakeAppraisal from "./TakeAppraisal";
 import ViewPaySlip from "./ViewPaySlip";
 import UpdateProfile from "./UpdateProfile";
-import Trips from "./Trips";
 import AssetManagement from "./AssetManagement";
+import AttendanceDashboard from "./AttendanceDashboard";
+import UserTrip from "./UserTrip";
+import EmployeeList from "./EmployeeList";
+import ResignationForm from "./ResignationForm";
+import UserMeetings from "./UserMeetings";
 
 const DashboardNavbar = () => {
   const { profileName, role } = useProfile() || { profileName: "User", role: "user" };
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [personalExpanded, setPersonalExpanded] = useState(false);
   const [hrExpanded, setHrExpanded] = useState(false);
-  const [notifications, setNotifications] = useState([]);
-  const [showNotifications, setShowNotifications] = useState(false);
+  const [assetExpanded, setAssetExpanded] = useState(false);
   const [activeSection, setActiveSection] = useState("dashboard");
+  const [attendanceRefreshTrigger, setAttendanceRefreshTrigger] = useState(0);
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
-  const location = useLocation();
-  const dropdownRef = useRef(null);
+  const userId = localStorage.getItem("userId");
 
+  // Sidebar Items
   const personalSubItems = [
     { label: "Apply Leave", key: "applyleave" },
     { label: "Goals", key: "goals" },
-    { label: "Take Appraisal", key: "appraisal" },
     { label: "View Payslip", key: "payslip" },
     { label: "Updated Profile", key: "profile" },
   ];
 
-  const HRManagementSubItems = [
+  const hrSubItems = [
     { label: "Trips", key: "trips" },
-    { label: "Asset Management", key: "assets" },
+    { label: "Employee", key: "Employee" },
+    { label: "Resignation", key: "resignation" },
+  ];
+
+  const assetSubItems = [
+    { label: "Asset", key: "asset" },
+    { label: "Asset Type", key: "assetType" },
   ];
 
   const otherSections = [
     { label: "Dashboard", key: "dashboard" },
     { label: "Company Profile", key: "company" },
     { label: "Calendar", key: "calender" },
-    { label: "Extras", key: "extras" },
+    { label: "Meeting", key: "Meeting" },
+    { label: "Attendance", key: "attendance" },
   ];
 
-  // Fetch notifications
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const userId = localStorage.getItem("userId");
-        const res = await axios.get("http://localhost:3001/notifications");
-        setNotifications(res.data.filter((n) => n.userId === userId));
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchNotifications();
-  }, []);
-
-  // Close notification dropdown on outside click
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowNotifications(false);
-      }
-    };
-    if (showNotifications)
-      document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showNotifications]);
-
+  // Logout
   const handleLogout = () => {
     localStorage.clear();
     navigate("/");
   };
 
-  const handleNotificationClick = async () => {
-    setShowNotifications(!showNotifications);
-    if (!showNotifications) {
-      try {
-        const unread = notifications.filter((n) => !n.isRead);
-        for (let n of unread) {
-          await axios.put(`http://localhost:3001/notifications/${n._id}/read`);
-        }
-        const res = await axios.get("http://localhost:3001/notifications");
-        const userId = localStorage.getItem("userId");
-        setNotifications(res.data.filter((n) => n.userId === userId));
-      } catch (err) {
-        console.error(err);
-      }
+  // Attendance
+  const handleCheckIn = async () => {
+    if (!userId) return alert("User ID missing! Cannot check in.");
+    try {
+      setLoading(true);
+      await axios.post("http://localhost:3001/attendance/checkin", { userId });
+      alert("✅ Checked in successfully!");
+      setAttendanceRefreshTrigger((prev) => prev + 1);
+    } catch (err) {
+      alert(err.response?.data?.message || "Check-in failed");
+    } finally {
+      setLoading(false);
     }
   };
 
+  const handleCheckOut = async () => {
+    if (!userId) return alert("User ID missing! Cannot check out.");
+    try {
+      setLoading(true);
+      await axios.put("http://localhost:3001/attendance/checkout", { userId });
+      alert("✅ Checked out successfully!");
+      setAttendanceRefreshTrigger((prev) => prev + 1);
+    } catch (err) {
+      alert(err.response?.data?.message || "Check-out failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Render section
   const renderSection = () => {
     switch (activeSection) {
       case "dashboard":
-        return <Dashboard />;
+        return <Dashboard handleCheckIn={handleCheckIn} handleCheckOut={handleCheckOut} loading={loading} />;
       case "applyleave":
         return <ApplyLeave />;
       case "goals":
@@ -116,88 +114,79 @@ const DashboardNavbar = () => {
         return <CompanyProfile />;
       case "calender":
         return <Calender />;
+      case "Meeting":
+        return <UserMeetings />;
       case "trips":
-        return <Trips />;
-      case "assets":
-        return <AssetManagement />;
-      case "extras":
-        return <div className="p-6 text-gray-700">Extras section coming soon...</div>;
+        return <UserTrip />;
+      case "resignation":
+        return <ResignationForm employeeId={userId} />;
+      case "Employee":
+        return <EmployeeList />;
+      case "attendance":
+        return <AttendanceDashboard isAdmin={role === "admin"} refreshTrigger={attendanceRefreshTrigger} />;
+      case "asset":
+        return <AssetManagement isAdmin={role === "admin"} currentUserId={userId} activeTab="asset" />;
+      case "assetType":
+        return <AssetManagement isAdmin={role === "admin"} currentUserId={userId} activeTab="assetType" />;
       default:
-        return <Dashboard />;
+        return <Dashboard handleCheckIn={handleCheckIn} handleCheckOut={handleCheckOut} loading={loading} />;
     }
   };
 
   return (
     <div className="flex h-screen">
-      {/* Fixed Gray Background */}
-      <div className="fixed inset-0 bg-[#f5f6fa] z-0"></div>
-
-      {/* Mobile Header */}
-      <div className="md:hidden flex items-center justify-between px-4 py-3 bg-gray-300 shadow w-full z-20">
-        <h1 className="text-5xl font-bold">
-          <span className="text-green-600">H</span>
-          <span className="text-black">R</span>
-          <span className="text-black">M</span>
-        </h1>
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="text-2xl text-gray-700"
-        >
-          {sidebarOpen ? "✕" : "☰"}
-        </button>
-      </div>
-
       {/* Sidebar */}
       <div
-        className={`fixed top-0 left-0 h-screen w-64 bg-gray-100 shadow-md transition-transform duration-300 z-20 ${
+        className={`fixed top-0 left-0 h-screen w-64 bg-black shadow-md transition-transform duration-300 z-20 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } md:translate-x-0`}
+        } md:translate-x-0 flex flex-col`}
       >
+        {/* Logo */}
         <div className="px-6 py-6 hidden md:block">
           <h1
-            className="text-6xl font-semibold cursor-pointer"
+            className="text-6xl text-coll font-semibold cursor-pointer"
             onClick={() => setActiveSection("dashboard")}
           >
             <span className="text-green-600">H</span>
-            <span className="text-black">R</span>
-            <span className="text-black">M</span>
+            <span className="text-green-600">R</span>
+            <span className="text-green-600">M</span>
           </h1>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
-          {/* Dashboard */}
-          <button
-            onClick={() => setActiveSection("dashboard")}
-            className={`w-full text-left px-6 py-2 text-sm font-medium transition ${
-              activeSection === "dashboard"
-                ? "text-black hover:text-red-500"
-                : "text-gray-800 hover:bg-[#e0e0e0] hover:text-gray-900"
-            }`}
-          >
-            Dashboard
-          </button>
+        {/* Scrollable menu */}
+        <div className="flex-1 overflow-y-auto px-0 scrollbar-hide">
+          {/* Other Sections */}
+          {otherSections.map((section) => (
+            <button
+              key={section.key}
+              onClick={() => setActiveSection(section.key)}
+              className={`w-full text-left px-6 py-2 text-bold text-white font-medium transition ${
+                activeSection === section.key
+                  ? "border-l-4 border-blue-600 text-white hover:bg-amber-500 rounded-4xl"
+                  : "text-white hover:bg-red-300 rounded-3xl hover:text-blue-900"
+              }`}
+            >
+              {section.label}
+            </button>
+          ))}
 
           {/* Personal Management */}
           <button
             onClick={() => setPersonalExpanded(!personalExpanded)}
-            className={`w-full text-left px-6 py-2 text-sm font-medium flex items-center justify-between`}
+            className="w-full text-left px-6 py-2 text-bold text-white font-medium flex items-center justify-between mt-4"
           >
             Personal Management
             {personalExpanded ? <MdExpandMore /> : <MdChevronRight />}
           </button>
-          <div
-            className={`transition-all duration-300 ${
-              personalExpanded ? "max-h-[500px]" : "max-h-0 overflow-hidden"
-            }`}
-          >
+          <div className={`transition-all duration-300 ${personalExpanded ? "max-h-[500px]" : "max-h-0 overflow-hidden"}`}>
             {personalSubItems.map((item) => (
               <button
                 key={item.key}
                 onClick={() => setActiveSection(item.key)}
-                className={`w-full text-left px-6 py-2 text-sm font-normal transition ${
+                className={`w-full text-left px-6 py-2 text-bold font-normal transition ${
                   activeSection === item.key
-                    ? "border-l-4 border-blue-600 bg-blue-50 text-blue-600"
-                    : "text-gray-700 hover:bg-[#e0e0e0] hover:text-gray-900"
+                    ? "border-l-4 border-blue-600 text-white hover:bg-amber-500 rounded-4xl"
+                    : "text-white hover:bg-red-300 rounded-3xl hover:text-blue-900"
                 }`}
               >
                 {item.label}
@@ -208,24 +197,20 @@ const DashboardNavbar = () => {
           {/* HR Management */}
           <button
             onClick={() => setHrExpanded(!hrExpanded)}
-            className={`w-full text-left px-6 py-2 text-sm font-medium flex items-center justify-between`}
+            className="w-full text-left px-6 py-2 text-bold text-white font-medium flex items-center justify-between mt-4"
           >
             HR Management
             {hrExpanded ? <MdExpandMore /> : <MdChevronRight />}
           </button>
-          <div
-            className={`transition-all duration-300 ${
-              hrExpanded ? "max-h-[200px]" : "max-h-0 overflow-hidden"
-            }`}
-          >
-            {HRManagementSubItems.map((item) => (
+          <div className={`transition-all duration-300 ${hrExpanded ? "max-h-[200px]" : "max-h-0 overflow-hidden"}`}>
+            {hrSubItems.map((item) => (
               <button
                 key={item.key}
                 onClick={() => setActiveSection(item.key)}
-                className={`w-full text-left px-6 py-2 text-sm font-normal transition ${
+                className={`w-full text-left px-6 py-2 text-bold font-normal transition ${
                   activeSection === item.key
-                    ? "border-l-4 border-blue-600 bg-blue-50 text-blue-600"
-                    : "text-gray-700 hover:bg-[#e0e0e0] hover:text-gray-900"
+                    ? "border-l-4 border-blue-600 text-white hover:bg-amber-500 rounded-4xl"
+                    : "text-white hover:bg-red-300 rounded-3xl hover:text-blue-900"
                 }`}
               >
                 {item.label}
@@ -233,52 +218,36 @@ const DashboardNavbar = () => {
             ))}
           </div>
 
-          {/* Other Sections */}
-          {otherSections
-            .filter((s) => s.key !== "dashboard")
-            .map((section) => (
+          {/* Asset Management */}
+          <button
+            onClick={() => setAssetExpanded(!assetExpanded)}
+            className="w-full text-left px-6 py-2 text-sm font-medium text-white flex items-center justify-between mt-4"
+          >
+            Asset Management
+            {assetExpanded ? <MdExpandMore /> : <MdChevronRight />}
+          </button>
+          <div className={`transition-all duration-300 ${assetExpanded ? "max-h-[200px]" : "max-h-0 overflow-hidden"}`}>
+            {assetSubItems.map((item) => (
               <button
-                key={section.key}
-                onClick={() => setActiveSection(section.key)}
-                className={`w-full text-left px-6 py-2 text-sm font-medium transition ${
-                  activeSection === section.key
-                    ? "text-black bg-blue-50"
-                    : "text-gray-800 hover:bg-[#e0e0e0] hover:text-gray-900"
+                key={item.key}
+                onClick={() => setActiveSection(item.key)}
+                className={`w-full text-left px-6 py-2 text-bold text-white font-normal transition ${
+                  activeSection === item.key
+                    ? "border-l-4 border-blue-600 text-white hover:bg-amber-500 rounded-4xl"
+                    : "text-white hover:bg-red-300 rounded-3xl hover:text-blue-900"
                 }`}
               >
-                {section.label}
+                {item.label}
               </button>
             ))}
+          </div>
         </div>
 
-        {/* Footer: Notifications & Logout */}
-        <div className="px-4 py-4 border-t border-gray-300">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={handleNotificationClick}
-              className="relative text-gray-500 hover:text-blue-600"
-              title="Notifications"
-            >
-              <FaBell size={18} />
-              {notifications.filter((n) => !n.isRead).length > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                  {notifications.filter((n) => !n.isRead).length}
-                </span>
-              )}
-            </button>
-
-            <img
-              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
-                profileName
-              )}`}
-              alt="User"
-              className="w-8 h-8 rounded-full"
-            />
-          </div>
-
+        {/* Footer */}
+        <div className="px-4 py-4">
           <button
             onClick={handleLogout}
-            className="mt-4 w-full px-4 py-2 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition"
+            className="w-full px-4 py-2 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition"
           >
             Logout
           </button>

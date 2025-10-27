@@ -1,6 +1,5 @@
 import express from "express";
 import Trip from "../models/Trip.js";
-
 const router = express.Router();
 
 // ➕ Add Trip
@@ -10,26 +9,29 @@ router.post("/add", async (req, res) => {
     await trip.save();
     res.status(201).json(trip);
   } catch (err) {
+    console.error("[ERROR] Add trip failed:", err);
     res.status(500).json({ message: err.message });
   }
 });
 
-// 📄 Get All Trips
+// 📄 Get all Trips
 router.get("/", async (req, res) => {
   try {
     const trips = await Trip.find();
     res.json(trips);
   } catch (err) {
+    console.error("[ERROR] Fetch trips failed:", err);
     res.status(500).json({ message: err.message });
   }
 });
 
-// 🗑️ Delete Trip
-router.delete("/:id", async (req, res) => {
+// 📝 Update Trip Status
+router.put("/:id", async (req, res) => {
   try {
-    await Trip.findByIdAndDelete(req.params.id);
-    res.json({ message: "Trip deleted" });
+    const trip = await Trip.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(trip);
   } catch (err) {
+    console.error("[ERROR] Update trip failed:", err);
     res.status(500).json({ message: err.message });
   }
 });

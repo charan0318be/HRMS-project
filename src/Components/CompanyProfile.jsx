@@ -14,9 +14,9 @@ const CompanyProfile = ({ isAdmin = false }) => {
   const [logoFile, setLogoFile] = useState(null);
   const [imageFiles, setImageFiles] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [editMode, setEditMode] = useState(isAdmin); // admin can edit by default
+  const [editMode, setEditMode] = useState(isAdmin);
 
-  // Fetch company profile
+  // Fetch company data
   const fetchCompany = async () => {
     try {
       const res = await axios.get("http://localhost:3001/company");
@@ -49,9 +49,12 @@ const CompanyProfile = ({ isAdmin = false }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData();
+
+    // Append all text fields
     Object.keys(company).forEach((key) => {
       if (key !== "logo" && key !== "images") formData.append(key, company[key]);
     });
+
     if (logoFile) formData.append("logo", logoFile);
     imageFiles.forEach((file) => formData.append("images", file));
 
@@ -63,7 +66,7 @@ const CompanyProfile = ({ isAdmin = false }) => {
       setLogoFile(null);
       setImageFiles([]);
       setEditMode(false);
-      fetchCompany(); // reload updated data
+      fetchCompany();
     } catch (err) {
       console.error("Error saving company:", err);
     }
@@ -71,10 +74,17 @@ const CompanyProfile = ({ isAdmin = false }) => {
 
   if (loading) return <p className="p-6 text-center">Loading company profile...</p>;
 
+  // Split images into main and thumbnails
+  const mainImage = company.images[0];
+  const otherImages = company.images.slice(1);
+
   // Display Mode
   if (!editMode)
     return (
-      <div className="max-w-7xl mx-auto p-6 bg-white shadow-md rounded space-y-6 relative">
+      <div className="max-w-7xl mx-auto mt-15 p-6 bg-white shadow-md rounded space-y-6 relative">
+        <div className="text-3xl text-shadow-black text-bold text-center">
+          <h1>Company Profile</h1>
+        </div>
         {isAdmin && (
           <button
             onClick={() => setEditMode(true)}
@@ -85,7 +95,7 @@ const CompanyProfile = ({ isAdmin = false }) => {
         )}
 
         <div className="flex flex-col md:flex-row gap-8 items-start">
-          {/* Left: Logo + Info */}
+          {/* Left: Info */}
           <div className="md:w-1/2 w-full space-y-4">
             {company.logo && (
               <img
@@ -101,16 +111,31 @@ const CompanyProfile = ({ isAdmin = false }) => {
             <p><strong>📝 Description:</strong> {company.description}</p>
           </div>
 
-          {/* Right: Main Image */}
-          <div className="md:w-1/2 w-full flex flex-wrap gap-4">
-            {company.images.map((img, index) => (
+          {/* Right: Image gallery */}
+          <div className="md:w-1/2 w-full flex flex-col gap-4">
+            {/* Main Image */}
+            {mainImage && (
               <img
-                key={index}
-                src={img.startsWith("blob") ? img : `http://localhost:3001${img}`}
-                alt={`Company ${index}`}
-                className="w-full md:w-[48%] h-48 object-cover rounded shadow"
+                src={mainImage.startsWith("blob") ? mainImage : `http://localhost:3001${mainImage}`}
+                alt="Main"
+                className="w-full h-64 md:h-80 object-cover rounded shadow"
               />
-            ))}
+            )}
+            {/* Thumbnails */}
+            <div className="flex flex-wrap gap-2 mt-2">
+              {otherImages.map((img, index) => (
+                <img
+                  key={index}
+                  src={img.startsWith("blob") ? img : `http://localhost:3001${img}`}
+                  alt={`Thumbnail ${index}`}
+                  className="w-24 h-24 object-cover rounded shadow cursor-pointer"
+                  onClick={() => {
+                    const newImages = [img, ...otherImages.filter((_, i) => i !== index)];
+                    setCompany({ ...company, images: newImages });
+                  }}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -170,6 +195,17 @@ const CompanyProfile = ({ isAdmin = false }) => {
         <div>
           <label className="block mb-1 font-medium">Upload Images</label>
           <input type="file" multiple onChange={handleImagesChange} className="w-full p-2 border rounded" />
+        </div>
+
+        <div className="flex flex-wrap gap-2 mt-2">
+          {imageFiles.map((file, idx) => (
+            <img
+              key={idx}
+              src={URL.createObjectURL(file)}
+              alt={`Preview ${idx}`}
+              className="w-24 h-24 object-cover rounded shadow"
+            />
+          ))}
         </div>
 
         <button

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useProfile } from './ProfileContext';
 import axios from 'axios';
 import AnnualLeave from './AnnualLeave';
+import socket from "../socket";
 
 const leaveTypes = [
   { type: 'Annual', days: 60 },
@@ -17,18 +18,53 @@ const ApplyLeave = () => {
   const [editEntry, setEditEntry] = useState(null);
   const [leaveHistory, setLeaveHistory] = useState([]);
 
-  // Fetch user's leave history from backend
+  // Fetch leave history & setup socket
   useEffect(() => {
+    let isMounted = true;
+
     const fetchUserLeaves = async () => {
       try {
-        const userId = localStorage.getItem('userId');
+        const userId = localStorage.getItem("userId");
         const res = await axios.get(`http://localhost:3001/leave/user/${userId}`);
-        setLeaveHistory(res.data);
+        if (isMounted) {
+          const uniqueLeaves = Array.from(
+            new Map(res.data.map(l => [l._id, l])).values()
+          );
+          setLeaveHistory(uniqueLeaves);
+        }
       } catch (err) {
-        console.error('Error fetching user leaves:', err);
+        console.error("❌ Error fetching user leaves:", err);
       }
     };
+
     fetchUserLeaves();
+
+    // Socket listeners
+    const handleLeaveAdded = (newLeave) => {
+      setLeaveHistory(prev => {
+        if (prev.find(l => l._id === newLeave._id)) return prev;
+        return [newLeave, ...prev];
+      });
+    };
+
+    const handleLeaveUpdated = (updatedLeave) => {
+      setLeaveHistory(prev => prev.map(l => l._id === updatedLeave._id ? updatedLeave : l));
+    };
+
+    const handleLeaveDeleted = (data) => {
+      setLeaveHistory(prev => prev.filter(l => l._id !== data.id));
+    };
+
+    socket.on("leaveAdded", handleLeaveAdded);
+    socket.on("leaveUpdated", handleLeaveUpdated);
+    socket.on("leaveDeleted", handleLeaveDeleted);
+
+    return () => {
+      isMounted = false;
+      socket.off("leaveAdded", handleLeaveAdded);
+      socket.off("leaveUpdated", handleLeaveUpdated);
+      socket.off("leaveDeleted", handleLeaveDeleted);
+    };
   }, []);
 
   const handleApplyClick = (type) => {
@@ -44,44 +80,23 @@ const ApplyLeave = () => {
   };
 
   const handleFormSubmit = (newLeave) => {
-    setLeaveHistory((prev) => {
-      if (editEntry && editEntry._id) {
-        // Replace the edited leave
-        return prev.map((entry) =>
-          entry._id === editEntry._id ? newLeave : entry
-        );
-      } else {
-        // Add new leave
-        return [newLeave, ...prev];
-      }
-    });
-
+    // Only close form, leaveHistory updates via socket
     setShowForm(false);
     setEditEntry(null);
     alert(editEntry ? 'Leave updated successfully!' : 'Leave submitted successfully!');
   };
 
-  // Delete handler
-  const handleDelete = async (id) => {
-  // Step 1: Ask user for confirmation
-  const confirmDelete = window.confirm('Are you sure you want to delete this leave?');
-  if (!confirmDelete) return; // Stop if user clicks "Cancel"
+  const handleDelete = async (leaveId) => {
+    if (!window.confirm("Are you sure you want to delete this leave?")) return;
 
-  console.log("Deleting leave with ID:", id);
-
-  try {
-    const res = await axios.delete(`http://localhost:3001/leave/${id}`);
-    console.log("Delete response:", res.data);
-
-    // Remove from local state
-    setLeaveHistory(prev => prev.filter(entry => entry.id !== id));
-    alert('Leave deleted successfully!');
-  } catch (err) {
-    console.error('Error deleting leave:', err.response || err);
-    alert('Failed to delete leave.');
-  }
-};
-
+    try {
+      await axios.delete(`http://localhost:3001/leave/${leaveId}`);
+      socket.emit("leaveDeleted", { id: leaveId }); // emit deletion
+    } catch (err) {
+      console.error("Delete error:", err);
+      alert(err.response?.data?.message || "Failed to delete leave");
+    }
+  };
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
@@ -90,10 +105,7 @@ const ApplyLeave = () => {
       {/* Leave Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
         {leaveTypes.map(({ type, days }) => (
-          <div
-            key={type}
-            className="bg-white rounded-lg shadow-md p-6 flex flex-col justify-between"
-          >
+          <div key={type} className="bg-white rounded-lg shadow-md p-6 flex flex-col justify-between">
             <div>
               <h3 className="text-lg font-semibold text-gray-700">{type} Leave</h3>
               <p className="text-sm text-gray-500">{days} days available</p>
@@ -121,7 +133,6 @@ const ApplyLeave = () => {
                 <th className="px-4 py-2 border">End Date</th>
                 <th className="px-4 py-2 border">Type</th>
                 <th className="px-4 py-2 border">Reason</th>
-                <th className="px-4 py-2 border">Relief Officer</th>
                 <th className="px-4 py-2 border">Status</th>
                 <th className="px-4 py-2 border">Actions</th>
               </tr>
@@ -134,26 +145,25 @@ const ApplyLeave = () => {
                   </td>
                 </tr>
               ) : (
-                leaveHistory.map((entry, idx) => (
-                  <tr key={idx} className="border-t">
+                leaveHistory.map(entry => (
+                  <tr key={entry._id} className="border-t">
                     <td className="px-4 py-2 border">{entry.name}</td>
                     <td className="px-4 py-2 border">{entry.duration}</td>
                     <td className="px-4 py-2 border">{entry.startDate}</td>
                     <td className="px-4 py-2 border">{entry.endDate}</td>
                     <td className="px-4 py-2 border">{entry.leaveType}</td>
                     <td className="px-4 py-2 border">{entry.reason}</td>
-                    <td className="px-4 py-2 border">{entry.reliefOfficer}</td>
                     <td className="px-4 py-2 border">{entry.status}</td>
-                    <td className="px-4 py-4 border   flex gap-2">
+                    <td className="px-4 py-4 border flex gap-2">
                       <button
                         onClick={() => handleEdit(entry)}
-                        className="text-white font-bold border  px-1 ph-2 bg-green-600  rounded hover:underline"
+                        className="text-white font-bold border px-1 py-2 bg-green-600 rounded hover:underline"
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => handleDelete(entry._id)}
-                        className="text-black border rounded px-1 ph-2 font-bold bg-red-600 hover:underline"
+                        className="text-black border rounded px-1 py-2 font-bold bg-red-600 hover:underline"
                       >
                         Delete
                       </button>
@@ -172,10 +182,7 @@ const ApplyLeave = () => {
           leaveType={selectedType}
           initialData={editEntry}
           profileName={profileName}
-          onClose={() => {
-            setShowForm(false);
-            setEditEntry(null);
-          }}
+          onClose={() => { setShowForm(false); setEditEntry(null); }}
           onSubmit={handleFormSubmit}
         />
       )}

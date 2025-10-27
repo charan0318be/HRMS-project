@@ -1,17 +1,17 @@
 import mongoose from "mongoose";
 
 const TripSchema = new mongoose.Schema({
+  employeeName: { type: String, required: true },
   destination: { type: String, required: true },
+  purpose: { type: String, required: true },
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },
-  purpose: { type: String, required: true },
-  employeeName: { type: String },
+  estimatedCost: { type: Number, required: true },
   status: {
     type: String,
-    enum: ["Planned", "Completed", "Cancelled"],
-    default: "Planned",
+    enum: ["Pending", "Approved", "Rejected", "Completed"],
+    default: "Pending",
   },
-  createdAt: { type: Date, default: Date.now },
 });
 
 const Trip = mongoose.model("Trip", TripSchema);

@@ -1,6 +1,8 @@
 import React from 'react';
 import { FaVolumeUp } from "react-icons/fa";
 import { Outlet, useNavigate } from 'react-router-dom';
+import img from '../assets/Screenshot 2025-10-14 163415.png'
+import img1 from '../assets/Screenshot 2025-10-14 164126.png'
 
 
 const Home = () => {
@@ -64,7 +66,7 @@ const Home = () => {
             </div>
           </div>
           <div className="w-full md:w-[500px] h-[300px] bg-gray-200 rounded-lg shadow-md flex items-center justify-center">
-            <span className="text-gray-500">[Dashboard Screenshot]</span>
+            <span className="text-gray-500"><img src={img} alt="" /></span>
           </div>
         </div>
 
@@ -161,27 +163,27 @@ const Home = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
-                label: '[Dashboard Overview Image]',
+               img:img,
                 desc: 'Get a complete overview of employee data, payroll, and HR activities in one unified dashboard.',
               },
               {
-                label: '[Employee Management Image]',
+                img:img1,
                 desc: 'Centralized employee information with personal details, documents, and job history.',
               },
               {
-                label: '[Payroll & Payslips Image]',
+                img:img1,
                 desc: 'Automated payroll processing with tax calculations, allowances, and downloadable payslips.',
               },
               {
-                label: '[Leave Management Image]',
+                img:img1,
                 desc: 'Easily apply, approve, and track employee leave requests with proper workflows and policies.',
               },
               {
-                label: '[Attendance Tracking Image]',
+                img:img1,
                 desc: 'Monitor employee check-ins, check-outs, and shifts with automated attendance logs.',
               },
               {
-                label: '[Recruitment & Onboarding Image]',
+                img:img1,
                 desc: 'Streamline hiring with applicant tracking and digital onboarding.',
               },
             ].map((item, idx) => (
@@ -189,10 +191,12 @@ const Home = () => {
                 key={idx}
                 className="bg-gray-100 rounded-lg shadow-md p-4"
               >
-                <div className="h-[200px] bg-gray-300 rounded mb-4 flex items-center justify-center">
-                  <span className="text-gray-500">{item.label}</span>
-                </div>
-                <p className="text-sm text-gray-700">{item.desc}</p>
+                <div className="h-[200px] rounded mb-4 overflow-hidden">
+              <img src={item.img} alt="HRM feature"
+            className="w-full h-full object-cover transform hover:scale-105 transition duration-300"/>
+              </div>
+              <p className="text-sm text-gray-700">{item.desc}</p>
+
               </div>
             ))}
 

@@ -55,8 +55,8 @@ const CreatePayslip = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-3xl mx-auto bg-white shadow-md rounded-lg p-6">
+    <div className="min-h-screen  p-6">
+      <div className="max-w-3xl mx-auto bg-white shadow-[0_2px_6px_rgba(0,0,0,0.5)] rounded-lg p-6">
         <h1 className="text-3xl font-bold mb-6 text-blue-800">Create Payslip</h1>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Employee Selection */}

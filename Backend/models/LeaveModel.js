@@ -1,16 +1,56 @@
 import mongoose from "mongoose";
 
-const leaveSchema = new mongoose.Schema({
-  employeeId: { type: mongoose.Schema.Types.ObjectId, ref: "Employee", required: true },
-  name: String,
-  leaveType: String,
-  startDate: String,
-  endDate: String,
-  duration: String,
-  resumptionDate: String,
-  reason: String,
-  reliefOfficer: String,
-  status: { type: String, default: "Pending" }
-}, { timestamps: true });
+const leaveSchema = new mongoose.Schema(
+  {
+    employeeId: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: "Employee", 
+      required: true 
+    },
+    name: { 
+      type: String, 
+      required: true 
+    },
+    leaveType: { 
+      type: String, 
+      enum: ["Annual", "Sick", "Maternity", "Casual"], 
+      required: true 
+    },
+    startDate: { 
+      type: Date, 
+      required: true 
+    },
+    endDate: { 
+      type: Date, 
+      required: true 
+    },
+    duration: { 
+      type: Number, 
+      required: true, 
+      min: 0 
+    },
+    resumptionDate: { 
+      type: Date, 
+      required: true 
+    },
+    reason: { 
+      type: String, 
+      required: true 
+    },
+    status: { 
+      type: String, 
+      enum: ["Pending", "Approved", "Rejected"], 
+      default: "Pending" 
+    },
+    handoverFile: { 
+      type: String, // path to uploaded file
+      default: null 
+    }
+  },
+  { 
+    timestamps: true // automatically adds createdAt and updatedAt
+  }
+);
 
-export default mongoose.model("Leave", leaveSchema);
+const LeaveModel = mongoose.model("Leave", leaveSchema);
+export default LeaveModel;

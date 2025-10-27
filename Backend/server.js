@@ -13,31 +13,70 @@ import attendanceRoutes from "./routes/attendance.js";
 import payslipRoutes from "./routes/payslip.js";
 import assetRoutes from "./routes/assetRoutes.js";
 import tripRoutes from "./routes/tripRoutes.js";
-
-
-
-
-
-
-
-
-
-
+import employeeRoutes from "./routes/employeeRoutes.js";
+import departmentRoutes from "./routes/departmentRoutes.js";
+import calendarRoutes from "./routes/calendarRoutes.js";
+import resignationRoutes from './routes/resignationRoutes.js'; 
+import meetingRoutes from "./routes/meetingRoutes.js";
+import { Server } from "socket.io";
+import http from 'http'; 
+import companyRoutes from './routes/company.js';
 
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
+// Attach Socket.IO instance to req
+
+
+
+
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*", // or your frontend URL
+    methods: ["GET", "POST"]
+  }
+});
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
+
+// Socket.IO event handling
+io.on("connection", (socket) => {
+  console.log("⚡ New client connected: ", socket.id);
+
+  // Example: listen for client event
+  socket.on("sendNotification", (data) => {
+    console.log("Received notification: ", data);
+    // Broadcast to all connected clients
+    io.emit("receiveNotification", data);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("Client disconnected: ", socket.id);
+  });
+});
+
+
 app.use("/api/assets", assetRoutes);
 app.use("/api/trips", tripRoutes);
+app.use("/api/calendar", calendarRoutes);
+app.use("/api/resignations", resignationRoutes);
+app.use("/api/meetings", meetingRoutes);
+app.use('/company', companyRoutes);
+
 
 app.use('/uploads', express.static('uploads'));
 const upload = multer({ dest: 'uploads/' });
 
-app.use('/uploads', express.static('uploads'));
 app.use("/attendance", attendanceRoutes);
 app.use("/payslip", payslipRoutes);
+app.use("/api/employees", employeeRoutes);
+app.use("/api/departments", departmentRoutes);
+
 
 mongoose.connect('mongodb://localhost:27017/employee')
   .then(() => console.log("MongoDB connected"))
@@ -48,12 +87,16 @@ mongoose.connect('mongodb://localhost:27017/employee')
 // -----------------------
 
 async function updateLeaveBalance(employeeId, leaveType) {
-  const totalDaysMapping = { Annual: 60, Sick: 15, Casual: 10 }; // correct totals
+  const totalDaysMapping = { Annual: 60, Sick: 15, Casual: 10 };
 
+  // Convert string ID to ObjectId
+  const empIdObj = new mongoose.Types.ObjectId(employeeId);
+
+  // Aggregate total used days
   const usedDaysAgg = await LeaveModel.aggregate([
     { 
       $match: { 
-        employeeId: mongoose.Types.ObjectId(employeeId), 
+        employeeId: empIdObj,
         leaveType, 
         status: "Approved" 
       } 
@@ -65,14 +108,15 @@ async function updateLeaveBalance(employeeId, leaveType) {
 
   const usedDays = usedDaysAgg.length ? usedDaysAgg[0].totalUsed : 0;
 
-  let balance = await LeaveBalance.findOne({ employeeId, leaveType });
+  // Find existing leave balance
+  let balance = await LeaveBalance.findOne({ employeeId: empIdObj, leaveType });
 
   if (balance) {
     balance.totalDays = totalDaysMapping[leaveType] || 12;
     balance.usedDays = usedDays;
   } else {
     balance = new LeaveBalance({
-      employeeId,
+      employeeId: empIdObj,
       leaveType,
       totalDays: totalDaysMapping[leaveType] || 12,
       usedDays
@@ -154,6 +198,94 @@ app.get("/leave/all", async (req, res) => {
   }
 });
 
+// Delete leave by ID
+app.delete("/leave/:id", async (req, res) => {
+  try {
+    const leaveId = req.params.id;
+
+    if (!mongoose.Types.ObjectId.isValid(leaveId)) {
+      return res.status(400).json({ message: "Invalid leave ID" });
+    }
+
+    const leave = await LeaveModel.findById(leaveId);
+    if (!leave) {
+      return res.status(404).json({ message: "Leave not found" });
+    }
+
+    await LeaveModel.deleteOne({ _id: leaveId });
+
+    // ✅ Update leave balance safely
+    if (leave.employeeId && leave.leaveType) {
+      try {
+        await updateLeaveBalance(leave.employeeId, leave.leaveType);
+      } catch (balanceErr) {
+        console.error("Failed to update leave balance:", balanceErr);
+      }
+    }
+
+    // ✅ Emit real-time delete event to all connected clients
+    req.io.emit("leaveDeleted", { id: leaveId });
+
+    res.json({ message: "Leave deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting leave:", err);
+    res.status(500).json({ message: "Error deleting leave", error: err.message });
+  }
+});
+
+app.get("/recent", async (req, res) => {
+  try {
+    const recentLeaves = await LeaveModel.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .populate("employeeId", "name")
+      .lean();
+
+    const formatted = recentLeaves.map(l => ({
+      employeeName: l.employeeId?.name || "Unknown",
+      leaveType: l.leaveType,
+      startDate: l.startDate,
+      endDate: l.endDate,
+      status: l.status
+    }));
+
+    res.json(formatted);
+  } catch (err) {
+    console.error("Error fetching recent leaves:", err);
+    res.status(500).json({ message: "Failed to fetch recent leaves", error: err.message });
+  }
+});
+
+
+// Recent Leaves - GET /api/leave/recent
+app.get("/api/leave/recent", async (req, res) => {
+  try {
+    const recentLeaves = await LeaveModel.find()
+      .sort({ createdAt: -1 })   // latest first
+      .limit(5)
+      .populate("employeeId", "name") // get employee name from ObjectId
+      .lean();
+
+    // Format response
+    const formatted = recentLeaves.map(l => ({
+      employeeName: l.employeeId?.name || "Unknown",
+      leaveType: l.leaveType,
+      startDate: l.startDate,
+      endDate: l.endDate,
+      status: l.status
+    }));
+
+    res.json(formatted);
+  } catch (err) {
+    console.error("Error fetching recent leaves:", err);
+    res.status(500).json({ message: "Failed to fetch recent leaves" });
+  }
+});
+
+
+
+
+
 app.get("/leave/user/:id", async (req, res) => {
   try {
     const leaves = await LeaveModel.find({ employeeId: req.params.id });
@@ -163,145 +295,101 @@ app.get("/leave/user/:id", async (req, res) => {
   }
 });
 
-app.put("/leave/:id", upload.single('handoverFile'), async (req, res) => {
+app.put("/leave/:id/status", async (req, res) => {
   try {
     const leaveId = req.params.id;
+    const { status } = req.body;
 
-    // Validate ObjectId
     if (!mongoose.Types.ObjectId.isValid(leaveId)) {
       return res.status(400).json({ message: "Invalid leave ID" });
     }
 
-    const data = { ...req.body };
-    if (req.file) data.handoverFile = req.file.path;
-
-    const updatedLeave = await LeaveModel.findByIdAndUpdate(leaveId, data, { new: true });
+    const updatedLeave = await LeaveModel.findByIdAndUpdate(
+      leaveId,
+      { status },
+      { new: true }
+    );
 
     if (!updatedLeave) return res.status(404).json({ message: "Leave not found" });
 
-    res.json({ message: "Leave updated", leave: updatedLeave });
+    res.json(updatedLeave);
   } catch (err) {
-    console.error("Error updating leave:", err);
-    res.status(500).json({ message: "Error updating leave", error: err });
+    console.error("Error updating leave status:", err);
+    res.status(500).json({ message: "Error updating leave status", error: err });
   }
 });
 
+
+// Leave Apply Route
 app.post("/leave/apply", upload.single('handoverFile'), async (req, res) => {
   console.log("=== Incoming leave apply request ===");
   console.log("req.body:", req.body);
   console.log("req.file:", req.file);
 
   try {
-    const data = {
-      ...req.body,
-      handoverFile: req.file ? req.file.path : null
-    };
+    const { employeeId, name, leaveType, startDate, endDate, duration, resumptionDate, reason } = req.body;
 
-    // REMOVE _id if present (important when editing)
-    if (data._id) delete data._id;
+    const durationNum = Number(duration);
 
-    const leave = new LeaveModel({
-  employeeId: new mongoose.Types.ObjectId(req.body.employeeId), // ✅ Convert string to ObjectId
-  name: req.body.name,
-  leaveType: req.body.leaveType,
-  startDate: req.body.startDate,
-  endDate: req.body.endDate,
-  duration: req.body.duration,
-  resumptionDate: req.body.resumptionDate,
-  reason: req.body.reason,
-  reliefOfficer: req.body.reliefOfficer,
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const resume = new Date(resumptionDate);
+
+
+    // ✅ Validation: Required fields
+    if (!employeeId || !name || !leaveType || !start || !end || !durationNum || !resume || !reason) {
+  return res.status(400).json({ message: "All required fields must be filled and valid" });
+}
+    // ✅ Prepare leave data
+    const leaveData = {
+  employeeId: new mongoose.Types.ObjectId(employeeId),
+  name,
+  leaveType,
+  startDate: start,
+  endDate: end,
+  duration: durationNum,
+  resumptionDate: resume,
+  reason,
   status: "Pending",
   handoverFile: req.file ? req.file.path : null,
-});
+};
 
+const leave = new LeaveModel(leaveData);
 await leave.save();
-// --- update leave balance automatically ---
-await updateLeaveBalance(leave.employeeId, leave.leaveType);
+
+    // ✅ Update leave balance
+    await updateLeaveBalance(leave.employeeId, leave.leaveType);
 
 
-    // create admin notification
-    // ✅ create admin notification (userId: null = admin)
-const notif = new NotificationModel({
-  userId: null,
-  message: `${data.name} applied for ${data.leaveType} leave`,
-  isRead: false
-});
-await notif.save();
+    
 
+    // ✅ Admin notification
+    const notif = new NotificationModel({
+      userId: null,
+      message: `${name} applied for ${leaveType} leave`,
+      isRead: false
+    });
+    await notif.save();
 
-    res.json({ message: "Leave applied", leave });
+    // ✅ Emit socket event for real-time update
+    req.io.emit("leaveAdded", leave);
+
+    res.status(201).json({ message: "Leave applied successfully", leave });
+
   } catch (err) {
     console.error("Error applying leave:", err);
-    res.status(500).json({ message: "Error applying leave", error: err });
+    res.status(500).json({ message: "Error applying leave", error: err.message });
   }
 });
 
+// Get all notifications
 app.get("/notifications", async (req, res) => {
   try {
     const notifications = await NotificationModel.find().sort({ createdAt: -1 });
     res.json(notifications);
   } catch (err) {
-    res.status(500).json({ message: "Error fetching notifications", error: err });
-  }
-});
-
-app.put("/notifications/:id/read", async (req, res) => {
-  try {
-    const notif = await NotificationModel.findByIdAndUpdate(
-      req.params.id,
-      { isRead: true },
-      { new: true }
-    );
-    res.json(notif);
-  } catch (err) {
-    res.status(500).json({ message: "Error updating notification", error: err });
-  }
-});
-
-app.put('/notifications/read-admin', async (req, res) => {
-  try {
-    await NotificationModel.updateMany(
-      { userId: null, isRead: false }, // admin notifications that are unread
-      { $set: { isRead: true } }
-    );
-    res.status(200).json({ message: 'Admin notifications marked as read' });
-  } catch (err) {
-    res.status(500).json({ message: "Error marking admin notifications as read", error: err });
-  }
-});
-
-app.put("/leave/:id/status", async (req, res) => {
-  try {
-    const leave = await LeaveModel.findById(req.params.id);
-    if (!leave) return res.status(404).json({ message: "Leave not found" });
-
-    leave.status = req.body.status;
-    await leave.save();
-
-    if (req.body.status === "Approved") {
-      const employeeId = new mongoose.Types.ObjectId(leave.employeeId);
-      const duration = parseInt(leave.duration) || 1;
-
-      let balance = await LeaveBalance.findOne({
-        employeeId,
-        leaveType: leave.leaveType,
-      });
-
-      // --- update leave balance automatically ---
-      await updateLeaveBalance(leave.employeeId, leave.leaveType);
-    }
-
-    // Notification for user
-    const notif = new NotificationModel({
-      userId: leave.employeeId,
-      message: `Your leave was ${leave.status}`,
-    });
-    await notif.save();
-
-    res.json({ message: "Leave status updated successfully", leave });
-  } catch (err) {
-    console.error("Error updating leave status:", err);
-    res.status(500).json({ message: "Error updating leave status", error: err });
+    console.error("Error fetching notifications:", err);
+    res.status(500).json({ message: "Error fetching notifications", error: err.message });
   }
 });
 
@@ -320,9 +408,53 @@ app.get("/leave/balance/:employeeId", async (req, res) => {
   }
 });
 
+// Get all employees
+app.get('/employees', async (req, res) => {
+  try {
+    const employees = await EmployeeModel.find();
+    res.json(employees);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Update employee by ID
+app.put('/employees/:id', async (req, res) => {
+  try {
+    const updated = await EmployeeModel.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+// Get employee by ID
+app.get('/employees/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid employee ID" });
+    }
+    const employee = await EmployeeModel.findById(id);
+    if (!employee) return res.status(404).json({ message: "Employee not found" });
+    res.json(employee);
+  } catch (err) {
+    console.error("Error fetching employee:", err);
+    res.status(500).json({ message: "Server error", error: err });
+  }
+});
 
 
 
+
+// Current route
+app.get("/targets", async (req, res) => {
+  try {
+    const targets = await Target.find();
+    res.json(targets);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
 
 
@@ -330,18 +462,18 @@ app.post("/targets", async (req, res) => {
   try {
     const { title, kpiWeight, description, employees, startDate, endDate } = req.body;
 
-    // Convert employees from comma-separated string to array
-    const employeesArray = employees
-      ? employees.split(",").map(e => e.trim()) 
-      : [];
+    // Wrap single employee into an array
+    const employeesArray = Array.isArray(employees) 
+      ? employees 
+      : employees ? [employees] : [];
 
     const target = new Target({
       title,
       kpiWeight,
       description,
       employees: employeesArray,
-      startDate,
-      endDate
+      startDate: startDate ? new Date(startDate) : null,
+      endDate: endDate ? new Date(endDate) : null
     });
 
     await target.save();
@@ -351,14 +483,36 @@ app.post("/targets", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
-app.get("/targets", async (req, res) => {
+
+
+// Update target progress
+app.put("/targets/:id/progress", async (req, res) => {
   try {
-    const targets = await Target.find();
-    res.json(targets);
+    const { id } = req.params;
+    const { progress } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid target ID" });
+    }
+
+    const target = await Target.findById(id);
+    if (!target) return res.status(404).json({ message: "Target not found" });
+
+    target.progress = Number(progress);
+    // Automatically mark as "Completed" if 100%
+    if (target.progress === 100) target.status = "Completed";
+
+    await target.save();
+
+    res.json({ message: "Progress updated successfully", target });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("Error updating target progress:", err);
+    res.status(500).json({ message: "Error updating progress", error: err.message });
   }
 });
+
+
+
 
 app.post("/appraisals", async (req, res) => {
   try {
@@ -400,6 +554,37 @@ app.get("/appraisals", async (req, res) => {
     res.status(500).json({ message: "Error fetching appraisals", error: err });
   }
 });
+
+
+// Approve a target (Manager/Admin approval)
+app.put("/targets/:id/approve", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { managerRemarks, rating } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid target ID" });
+    }
+
+    const target = await Target.findById(id);
+    if (!target) return res.status(404).json({ message: "Target not found" });
+
+    target.status = "Approved";           // Marks the target as approved
+    target.managerRemarks = managerRemarks || "";
+    target.rating = rating || null;
+    target.managerApprovedAt = new Date();
+
+    await target.save();
+
+    res.status(200).json({ message: "Target approved successfully", target });
+  } catch (error) {
+    console.error("Error approving target:", error);
+    res.status(500).json({ message: "Error approving target", error: error.message });
+  }
+});
+
+
+
 app.put("/appraisals/:id", async (req, res) => {
   try {
     const { adminRemarks, status, score, assignedTask } = req.body;
@@ -458,6 +643,7 @@ app.put("/appraisals/:id", async (req, res) => {
 // ----------------------
 // START SERVER
 // ----------------------
-app.listen(3001, () => {
-  console.log('Server is running on port 3001'); 
+server.listen(3001, () => {
+  console.log('Server is running on port 3001 with Socket.IO'); 
 });
+

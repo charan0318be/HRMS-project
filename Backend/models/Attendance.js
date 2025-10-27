@@ -1,15 +1,12 @@
-// models/Attendance.js
 import mongoose from "mongoose";
 
 const attendanceSchema = new mongoose.Schema({
-  userId: { type: String, required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "Employee", required: true },
   date: { type: String, required: true },
   checkIn: { type: Date, required: true },
   checkOut: { type: Date },
   totalHours: { type: Number },
-  status: { type: String },
-});
+  status: { type: String, default: "Present" },
+}, { timestamps: true });
 
-const Attendance = mongoose.model("Attendance", attendanceSchema);
-
-export default Attendance;
+export default mongoose.model("Attendance", attendanceSchema);
