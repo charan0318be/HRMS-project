@@ -21,6 +21,9 @@ import meetingRoutes from "./routes/meetingRoutes.js";
 import { Server } from "socket.io";
 import http from 'http'; 
 import companyRoutes from './routes/company.js';
+import dotenv from "dotenv";
+dotenv.config();
+
 
 
 const app = express();
@@ -78,7 +81,7 @@ app.use("/api/employees", employeeRoutes);
 app.use("/api/departments", departmentRoutes);
 
 
-mongoose.connect('mongodb://localhost:27017/employee')
+mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"))
   .catch(err => console.error("MongoDB connection error:", err));
 
@@ -643,7 +646,10 @@ app.put("/appraisals/:id", async (req, res) => {
 // ----------------------
 // START SERVER
 // ----------------------
-server.listen(3001, () => {
-  console.log('Server is running on port 3001 with Socket.IO'); 
+const PORT = process.env.PORT || 3001;
+
+server.listen(PORT, () => {
+  console.log(`✅ Server is running on port ${PORT} with Socket.IO`);
 });
+
 
