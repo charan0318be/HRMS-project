@@ -47,7 +47,7 @@ const AdminDashboard = () => {
   // --- Fetch Employees ---
   const fetchEmployees = async () => {
     try {
-      const res = await axios.get("http://localhost:3001/employees");
+      const res = await axios.get("https://hrms-project-1-eca3.onrender.com/employees");
       setEmployees(res.data || []);
     } catch (err) {
       console.error("Error fetching employees:", err);
@@ -70,7 +70,7 @@ useEffect(() => {
   // --- Fetch Attendance Stats ---
   const fetchAttendance = async () => {
     try {
-      const res = await axios.get("http://localhost:3001/attendance/stats");
+      const res = await axios.get("https://hrms-project-1-eca3.onrender.com/attendance/stats");
       setAttendanceStats(res.data);
     } catch (err) {
       console.error("Error fetching attendance stats:", err);
@@ -80,7 +80,7 @@ useEffect(() => {
   // --- Fetch Departments ---
   const fetchDepartments = async () => {
     try {
-      const res = await axios.get("http://localhost:3001/api/departments");
+      const res = await axios.get("https://hrms-project-1-eca3.onrender.com/api/departments");
       setDepartments(res.data || []);
     } catch (err) {
       console.error("Error fetching departments:", err);
@@ -90,7 +90,7 @@ useEffect(() => {
   // --- Fetch Notifications ---
   const fetchNotifications = async () => {
     try {
-      const res = await axios.get("http://localhost:3001/notifications");
+      const res = await axios.get("https://hrms-project-1-eca3.onrender.com/notifications");
       setNotifications(res.data || []);
     } catch (err) {
       console.error("Error fetching notifications:", err);
@@ -102,9 +102,9 @@ useEffect(() => {
   try {
     // fetch all three in parallel
     const [leavesRes, candidatesRes, meetingsRes] = await Promise.all([
-      axios.get("http://localhost:3001/api/leave/recent"),
-      axios.get("http://localhost:3001/api/employees/recent"),
-      axios.get("http://localhost:3001/api/meetings/recent"),
+      axios.get("https://hrms-project-1-eca3.onrender.com/api/leave/recent"),
+      axios.get("https://hrms-project-1-eca3.onrender.com/api/employees/recent"),
+      axios.get("https://hrms-project-1-eca3.onrender.com/api/meetings/recent"),
     ]);
 
     // Recent Leaves
@@ -136,8 +136,8 @@ useEffect(() => {
   // --- Fetch Leaves & Appraisals ---
   const fetchDashboardData = async () => {
     try {
-      const leavesRes = await axios.get("http://localhost:3001/leave/all");
-      const appraisalsRes = await axios.get("http://localhost:3001/appraisals");
+      const leavesRes = await axios.get("https://hrms-project-1-eca3.onrender.com/leave/all");
+      const appraisalsRes = await axios.get("https://hrms-project-1-eca3.onrender.com/appraisals");
 
       const today = new Date();
       const onLeaveIds = leavesRes.data
@@ -202,7 +202,8 @@ useEffect(() => {
     formData.append("profileImage", file);
     try {
       await axios.put(
-        `http://localhost:3001/profile/upload/${userId}`,
+        `https://hrms-project-1-eca3.onrender.com
+/profile/upload/${userId}`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );

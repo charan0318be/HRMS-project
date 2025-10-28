@@ -10,7 +10,7 @@ const AdminTrip = () => {
   const fetchTrips = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("http://localhost:3001/api/trips");
+      const res = await axios.get("https://hrms-project-1-eca3.onrender.com/api/trips");
       setTrips(res.data);
     } catch (err) {
       console.error("Fetch trips failed:", err);
@@ -26,7 +26,8 @@ const AdminTrip = () => {
 
   const handleApproveReject = async (tripId, status) => {
     try {
-      await axios.put(`http://localhost:3001/api/trips/${tripId}`, { status });
+      await axios.put(`https://hrms-project-1-eca3.onrender.com
+/api/trips/${tripId}`, { status });
       setShowModal(false);
       fetchTrips();
     } catch (err) {

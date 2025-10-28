@@ -23,7 +23,7 @@ const LeaveManagement = ({ activeSubmenu = "leave-settings", onLeaveApplied }) =
     const fetchLeaves = async () => {
       console.log("[DEBUG] Fetching leaves from backend...");
       try {
-        const res = await axios.get("http://localhost:3001/leave/all");
+        const res = await axios.get("https://hrms-project-1-eca3.onrender.com/leave/all");
         console.log("[DEBUG] Leaves fetched:", res.data);
         const uniqueLeaves = Array.from(new Map(res.data.map((l) => [l._id, l])).values());
         setLeaveHistory(uniqueLeaves);
@@ -65,7 +65,7 @@ const LeaveManagement = ({ activeSubmenu = "leave-settings", onLeaveApplied }) =
         newResumptionDate: formData.newResumptionDate,
       };
       console.log("[DEBUG] Sending recall data to backend:", recallData);
-      const res = await axios.post("http://localhost:3001/recall", recallData);
+      const res = await axios.post("https://hrms-project-1-eca3.onrender.com/recall", recallData);
       console.log("[DEBUG] Recall response:", res.data);
       onLeaveApplied?.();
       resetForm();
@@ -80,7 +80,8 @@ const LeaveManagement = ({ activeSubmenu = "leave-settings", onLeaveApplied }) =
     if (!leave) return;
     try {
       const res = await axios.put(
-        `http://localhost:3001/leave/${leave._id}/status`,
+        `https://hrms-project-1-eca3.onrender.com
+/leave/${leave._id}/status`,
         { status }
       );
       console.log("[DEBUG] Status update response:", res.data);

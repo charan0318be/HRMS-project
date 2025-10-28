@@ -54,7 +54,7 @@ const MaternityLeave = ({ leaveType, onClose, onSubmit, initialData = {}, profil
 
         // ✅ Update existing leave
         res = await axios.put(
-          `http://localhost:3001/leave/${form.leaveId}`,
+          `https://hrms-project-1-eca3.onrender.com/leave/${form.leaveId}`,
           formData,
           { headers: { "Content-Type": "multipart/form-data" } }
         );
@@ -63,7 +63,7 @@ const MaternityLeave = ({ leaveType, onClose, onSubmit, initialData = {}, profil
       } else {
         // 🆕 Create new leave
         res = await axios.post(
-          "http://localhost:3001/leave/apply",
+          "https://hrms-project-1-eca3.onrender.com/leave/apply",
           formData,
           { headers: { "Content-Type": "multipart/form-data" } }
         );

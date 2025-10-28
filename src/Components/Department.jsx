@@ -26,7 +26,7 @@ const Department = ({ initialTab = "view", hideTabs = false }) => {
   const fetchDepartments = async () => {
     try {
       console.log("[DEBUG] Fetching departments...");
-      const res = await axios.get("http://localhost:3001/api/departments");
+      const res = await axios.get("https://hrms-project-1-eca3.onrender.com/api/departments");
       console.log("[DEBUG] Departments fetched:", res.data);
       setDepartments(res.data);
     } catch (err) {
@@ -38,7 +38,7 @@ const Department = ({ initialTab = "view", hideTabs = false }) => {
   const fetchEmployees = async () => {
     try {
       console.log("[DEBUG] Fetching employees...");
-      const res = await axios.get("http://localhost:3001/api/employees");
+      const res = await axios.get("https://hrms-project-1-eca3.onrender.com/api/employees");
       console.log("[DEBUG] Employees fetched:", res.data);
       setEmployees(res.data);
     } catch (err) {
@@ -66,7 +66,7 @@ const Department = ({ initialTab = "view", hideTabs = false }) => {
     try {
       console.log("[DEBUG] Adding department:", selectedDeptDetails);
       const res = await axios.post(
-        "http://localhost:3001/api/departments/add",
+        "https://hrms-project-1-eca3.onrender.com/api/departments/add",
         selectedDeptDetails
       );
       console.log("[DEBUG] Department added:", res.data);
@@ -103,7 +103,8 @@ const Department = ({ initialTab = "view", hideTabs = false }) => {
     try {
       console.log("[DEBUG] Updating department:", editingDept, selectedDeptDetails);
       const res = await axios.put(
-        `http://localhost:3001/api/departments/${editingDept}`,
+        `https://hrms-project-1-eca3.onrender.com
+/api/departments/${editingDept}`,
         selectedDeptDetails
       );
       console.log("[DEBUG] Department updated:", res.data);
@@ -127,7 +128,8 @@ const Department = ({ initialTab = "view", hideTabs = false }) => {
     if (!window.confirm("Are you sure you want to delete this department?")) return;
     try {
       console.log("[DEBUG] Deleting department:", id);
-      const res = await axios.delete(`http://localhost:3001/api/departments/${id}`);
+      const res = await axios.delete(`https://hrms-project-1-eca3.onrender.com
+/api/departments/${id}`);
       console.log("[DEBUG] Department deleted:", res.data);
       fetchDepartments();
     } catch (err) {
@@ -149,7 +151,8 @@ const Department = ({ initialTab = "view", hideTabs = false }) => {
       });
 
       const res = await axios.put(
-        `http://localhost:3001/api/departments/assign/${selectedDepartment}`,
+        `https://hrms-project-1-eca3.onrender.com
+/api/departments/assign/${selectedDepartment}`,
         { employees: [{ employeeId: selectedEmployee, role: selectedRole }] }
       );
 

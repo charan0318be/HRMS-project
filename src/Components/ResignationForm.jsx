@@ -17,7 +17,8 @@ const ResignationForm = ({ employeeId }) => {
   const fetchResignation = async () => {
     try {
       console.log("[DEBUG] Fetching resignation for employeeId:", employeeId);
-      const res = await axios.get(`http://localhost:3001/api/resignations/my/${employeeId}`);
+      const res = await axios.get(`https://hrms-project-1-eca3.onrender.com
+/api/resignations/my/${employeeId}`);
       if (res.data) {
         setResignation(res.data);
         console.log("[DEBUG] Current resignation fetched:", res.data);
@@ -39,7 +40,8 @@ const ResignationForm = ({ employeeId }) => {
     console.log("[DEBUG] Submitting resignation:", { employeeId, reason, lastWorkingDay });
 
     try {
-      const res = await axios.post("http://localhost:3001/api/resignations/apply", {
+      const res = await axios.post("https://hrms-project-1-eca3.onrender.com
+/api/resignations/apply", {
         employeeId,
         reason,
         lastWorkingDay,

@@ -34,7 +34,8 @@ const AdminSection = () => {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const res = await axios.get("http://localhost:3001/notifications");
+        const res = await axios.get("https://hrms-project-1-eca3.onrender.com
+/notifications");
         setNotifications(res.data);
       } catch (err) {
         console.error("Error fetching notifications", err);

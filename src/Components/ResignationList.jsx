@@ -5,12 +5,14 @@ const ResignationList = () => {
   const [resignations, setResignations] = useState([]);
 
   const fetchResignations = async () => {
-    const res = await axios.get("http://localhost:3001/api/resignations/all");
+    const res = await axios.get("https://hrms-project-1-eca3.onrender.com
+/api/resignations/all");
     setResignations(res.data);
   };
 
   const handleUpdate = async (id, status) => {
-    await axios.put(`http://localhost:3001/api/resignations/update/${id}`, { status });
+    await axios.put(`https://hrms-project-1-eca3.onrender.com
+/api/resignations/update/${id}`, { status });
     fetchResignations();
   };
  

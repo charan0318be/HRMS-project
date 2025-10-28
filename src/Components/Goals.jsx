@@ -8,7 +8,7 @@ const Goals = () => {
   useEffect(() => {
     const fetchTargets = async () => {
       try {
-        const res = await axios.get("http://localhost:3001/targets");
+        const res = await axios.get("https://hrms-project-1-eca3.onrender.com/targets");
         setTargets(res.data);
       } catch (err) {
         console.error(err);
@@ -26,14 +26,15 @@ const Goals = () => {
     }
 
     try {
-      await axios.put(`http://localhost:3001/targets/${targetId}/progress`, {
+      await axios.put(`https://hrms-project-1-eca3.onrender.com
+/targets/${targetId}/progress`, {
         progress: Number(progress),
       });
       alert("Progress updated successfully");
       setProgressInputs({ ...progressInputs, [targetId]: "" });
 
       // Refresh targets
-      const res = await axios.get("http://localhost:3001/targets");
+      const res = await axios.get("https://hrms-project-1-eca3.onrender.com/targets");
       setTargets(res.data);
     } catch (err) {
       console.error(err);

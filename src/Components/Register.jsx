@@ -30,7 +30,7 @@ const Register = () => {
       return;
     }
 
-    axios.post('http://localhost:3001/register', formdata)
+    axios.post('https://hrms-project-1-eca3.onrender.com/register', formdata)
       .then((res) => {
         alert('Registered successfully!');
         navigate('/')

@@ -10,11 +10,12 @@ const AttendanceDashboard = ({ isAdmin = false }) => {
     try {
       if (isAdmin) {
         // ✅ Admin sees all employee attendance
-        const res = await axios.get("http://localhost:3001/attendance");
+        const res = await axios.get("https://hrms-project-1-eca3.onrender.com/attendance");
         setRecords(res.data);
       } else {
         // ✅ User sees only their own attendance
-        const res = await axios.get(`http://localhost:3001/attendance/${userId}`);
+        const res = await axios.get(`https://hrms-project-1-eca3.onrender.com
+/attendance/${userId}`);
         setRecords(res.data);
       }
     } catch (err) {
@@ -25,7 +26,7 @@ const AttendanceDashboard = ({ isAdmin = false }) => {
   const handleCheckIn = async () => {
     try {
       setLoading(true);
-      await axios.post("http://localhost:3001/attendance/checkin", { userId });
+      await axios.post("https://hrms-project-1-eca3.onrender.com/attendance/checkin", { userId });
       await fetchAttendance();
       alert("Checked in successfully");
     } catch (err) {
@@ -38,7 +39,7 @@ const AttendanceDashboard = ({ isAdmin = false }) => {
   const handleCheckOut = async () => {
     try {
       setLoading(true);
-      await axios.put("http://localhost:3001/attendance/checkout", { userId });
+      await axios.put("https://hrms-project-1-eca3.onrender.com/attendance/checkout", { userId });
       await fetchAttendance();
       alert("Checked out successfully");
     } catch (err) {

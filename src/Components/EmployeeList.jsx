@@ -11,7 +11,7 @@ const EmployeeList = () => {
     const fetchAssignedEmployees = async () => {
       try {
         console.log("[DEBUG] Fetching assigned employees...");
-        const res = await axios.get("http://localhost:3001/api/departments");
+        const res = await axios.get("https://hrms-project-1-eca3.onrender.com/api/departments");
         console.log("[DEBUG] Department data:", res.data);
 
         const assigned = res.data.flatMap((dept) =>

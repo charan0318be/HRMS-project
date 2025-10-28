@@ -15,7 +15,7 @@ const CreatePayslip = () => {
 
   useEffect(() => {
     const fetchEmployees = async () => {
-      const res = await axios.get("http://localhost:3001/employees");
+      const res = await axios.get("https://hrms-project-1-eca3.onrender.com/employees");
       setEmployees(res.data);
     };
     fetchEmployees();
@@ -37,7 +37,7 @@ const CreatePayslip = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:3001/payslip", formData);
+      await axios.post("https://hrms-project-1-eca3.onrender.com/payslip", formData);
       alert("Payslip created successfully!");
       setFormData({
         employeeId: "",

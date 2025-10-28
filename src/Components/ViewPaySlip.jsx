@@ -11,7 +11,8 @@ const ViewPaySlip = () => {
     const fetchPayslips = async () => {
       try {
         const res = await axios.get(
-          `http://localhost:3001/payslip/employee/${userId}`
+          `https://hrms-project-1-eca3.onrender.com
+/payslip/employee/${userId}`
         );
         setPayslips(res.data);
       } catch (err) {

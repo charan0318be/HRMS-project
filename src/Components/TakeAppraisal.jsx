@@ -25,7 +25,7 @@ const TakeAppraisal = ({ isAdmin = false, onUpdate }) => {
     const fetchTargets = async () => {
       console.log("[DEBUG] Fetching targets...");
       try {
-        const res = await axios.get("http://localhost:3001/targets");
+        const res = await axios.get("https://hrms-project-1-eca3.onrender.com/targets");
         if (!userId || !userName) return setTargets([]);
 
         const assignedTargets = res.data.filter((t) => {
@@ -53,7 +53,7 @@ const TakeAppraisal = ({ isAdmin = false, onUpdate }) => {
     const fetchAppraisals = async () => {
       console.log("[DEBUG] Fetching appraisals...");
       try {
-        const res = await axios.get("http://localhost:3001/appraisals");
+        const res = await axios.get("https://hrms-project-1-eca3.onrender.com/appraisals");
         const normalized = res.data.map((a) => ({
           ...a,
           targetId: String(a.targetId?._id || a.targetId),
@@ -101,7 +101,7 @@ const TakeAppraisal = ({ isAdmin = false, onUpdate }) => {
     console.log(`[DEBUG] Submitting appraisal for target ${targetId}...`);
 
     try {
-      const res = await axios.post("http://localhost:3001/appraisals", {
+      const res = await axios.post("https://hrms-project-1-eca3.onrender.com/appraisals", {
         employeeId: userId,
         targetId,
         score,
@@ -258,7 +258,8 @@ const TakeAppraisal = ({ isAdmin = false, onUpdate }) => {
                         }
                         try {
                           console.log("[DEBUG] Saving admin feedback for appraisal:", a._id);
-                          await axios.put(`http://localhost:3001/appraisals/${a._id}`, {
+                          await axios.put(`https://hrms-project-1-eca3.onrender.com
+/appraisals/${a._id}`, {
                             adminRemarks: a.adminRemarks,
                             assignedTask: a.assignedTask,
                             status: a.status,

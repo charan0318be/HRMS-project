@@ -19,7 +19,7 @@ const CompanyProfile = ({ isAdmin = false }) => {
   // Fetch company data
   const fetchCompany = async () => {
     try {
-      const res = await axios.get("http://localhost:3001/company");
+      const res = await axios.get("https://hrms-project-1-eca3.onrender.com/company");
       const data = res.data || {};
       setCompany({
         name: data.name || "",
@@ -59,7 +59,7 @@ const CompanyProfile = ({ isAdmin = false }) => {
     imageFiles.forEach((file) => formData.append("images", file));
 
     try {
-      await axios.post("http://localhost:3001/company", formData, {
+      await axios.post("https://hrms-project-1-eca3.onrender.com/company", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       alert("Company profile saved!");
@@ -99,7 +99,8 @@ const CompanyProfile = ({ isAdmin = false }) => {
           <div className="md:w-1/2 w-full space-y-4">
             {company.logo && (
               <img
-                src={company.logo.startsWith("blob") ? company.logo : `http://localhost:3001${company.logo}`}
+                src={company.logo.startsWith("blob") ? company.logo : `https://hrms-project-1-eca3.onrender.com
+${company.logo}`}
                 alt="Company Logo"
                 className="w-28 h-28 object-cover rounded-full shadow"
               />
@@ -116,7 +117,8 @@ const CompanyProfile = ({ isAdmin = false }) => {
             {/* Main Image */}
             {mainImage && (
               <img
-                src={mainImage.startsWith("blob") ? mainImage : `http://localhost:3001${mainImage}`}
+                src={mainImage.startsWith("blob") ? mainImage : `https://hrms-project-1-eca3.onrender.com
+${mainImage}`}
                 alt="Main"
                 className="w-full h-64 md:h-80 object-cover rounded shadow"
               />
@@ -126,7 +128,8 @@ const CompanyProfile = ({ isAdmin = false }) => {
               {otherImages.map((img, index) => (
                 <img
                   key={index}
-                  src={img.startsWith("blob") ? img : `http://localhost:3001${img}`}
+                  src={img.startsWith("blob") ? img : `https://hrms-project-1-eca3.onrender.com
+${img}`}
                   alt={`Thumbnail ${index}`}
                   className="w-24 h-24 object-cover rounded shadow cursor-pointer"
                   onClick={() => {

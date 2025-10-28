@@ -23,7 +23,7 @@ const UserTrip = () => {
   const fetchTrips = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("http://localhost:3001/api/trips");
+      const res = await axios.get("https://hrms-project-1-eca3.onrender.com/api/trips");
       setTrips(res.data.filter((t) => t.employeeName === profileName));
     } catch (err) {
       console.error("Fetch trips failed:", err);
@@ -45,7 +45,7 @@ const UserTrip = () => {
       return;
     }
     try {
-      await axios.post("http://localhost:3001/api/trips/add", formData);
+      await axios.post("https://hrms-project-1-eca3.onrender.com/api/trips/add", formData);
       setShowModal(false);
       setFormData({
         purpose: "",

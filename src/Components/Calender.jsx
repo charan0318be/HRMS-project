@@ -11,7 +11,8 @@ const Calender = ({ isAdmin = false }) => {
 
   // Fetch all events from backend
  useEffect(() => {
-axios.get("http://localhost:3001/api/calendar")
+axios.get("https://hrms-project-1-eca3.onrender.com
+/api/calendar")
     .then((res) => {
       if (Array.isArray(res.data)) {
         const eventMap = {};
@@ -70,7 +71,8 @@ axios.get("http://localhost:3001/api/calendar")
   const date = `${year}-${String(month).padStart(2, "0")}-${String(selectedDate).padStart(2, "0")}`;
 
   try {
-    await axios.post("http://localhost:3001/api/calendar", { date, eventText });
+    await axios.post("https://hrms-project-1-eca3.onrender.com
+/api/calendar", { date, eventText });
     setEvents({ ...events, [selectedDate]: eventText });
     setSelectedDate(null);
     setEventText("");

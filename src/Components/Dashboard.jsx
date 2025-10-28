@@ -34,7 +34,7 @@ const Dashboard = ({ onAttendanceUpdate }) => {
     if (!userId) return;
     const fetchLeaves = async () => {
       try {
-        const res = await axios.get(`http://localhost:3001/leave/balance/${userId}`);
+        const res = await axios.get(`https://hrms-project-1-eca3.onrender.com/leave/balance/${userId}`);
         setLeaveData(res.data || []);
       } catch (err) {
         console.error("Error fetching leave data:", err);
@@ -48,7 +48,7 @@ const Dashboard = ({ onAttendanceUpdate }) => {
     if (!userId) return alert("User ID missing! Cannot check in.");
     try {
       setLoading(true);
-      await axios.post("http://localhost:3001/attendance/checkin", { userId });
+      await axios.post("https://hrms-project-1-eca3.onrender.com/attendance/checkin", { userId });
       alert(`✅ ${user.name} checked in successfully!`);
       if (onAttendanceUpdate) onAttendanceUpdate(); // trigger parent refresh
     } catch (err) {
@@ -64,7 +64,7 @@ const Dashboard = ({ onAttendanceUpdate }) => {
     if (!userId) return alert("User ID missing! Cannot check out.");
     try {
       setLoading(true);
-      await axios.put("http://localhost:3001/attendance/checkout", { userId });
+      await axios.put("https://hrms-project-1-eca3.onrender.com/attendance/checkout", { userId });
       alert(`✅ ${user.name} checked out successfully!`);
       if (onAttendanceUpdate) onAttendanceUpdate(); // trigger parent refresh
     } catch (err) {
@@ -91,7 +91,8 @@ const Dashboard = ({ onAttendanceUpdate }) => {
     const formData = new FormData();
     formData.append("profileImage", file);
     try {
-      await axios.put(`http://localhost:3001/profile/upload/${userId}`, formData, {
+      await axios.put(`https://hrms-project-1-eca3.onrender.com
+/profile/upload/${userId}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       alert("Profile updated!");

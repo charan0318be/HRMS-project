@@ -71,7 +71,7 @@ const DashboardNavbar = () => {
     if (!userId) return alert("User ID missing! Cannot check in.");
     try {
       setLoading(true);
-      await axios.post("http://localhost:3001/attendance/checkin", { userId });
+      await axios.post("https://hrms-project-1-eca3.onrender.com/attendance/checkin", { userId });
       alert("✅ Checked in successfully!");
       setAttendanceRefreshTrigger((prev) => prev + 1);
     } catch (err) {
@@ -85,7 +85,7 @@ const DashboardNavbar = () => {
     if (!userId) return alert("User ID missing! Cannot check out.");
     try {
       setLoading(true);
-      await axios.put("http://localhost:3001/attendance/checkout", { userId });
+      await axios.put("https://hrms-project-1-eca3.onrender.com/attendance/checkout", { userId });
       alert("✅ Checked out successfully!");
       setAttendanceRefreshTrigger((prev) => prev + 1);
     } catch (err) {

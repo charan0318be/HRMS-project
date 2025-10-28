@@ -35,7 +35,8 @@ const AnnualLeave = ({ leaveType, onClose, onSubmit, initialData = {} }) => {
         const userId = localStorage.getItem("userId");
         if (!userId) return;
 
-        const res = await axios.get(`http://localhost:3001/employees/${userId}`);
+        const res = await axios.get(`https://hrms-project-1-eca3.onrender.com
+/employees/${userId}`);
         setForm(prev => ({ ...prev, name: res.data.name || "" }));
       } catch (err) {
         console.error("❌ Error fetching user profile:", err);
@@ -102,11 +103,12 @@ const AnnualLeave = ({ leaveType, onClose, onSubmit, initialData = {} }) => {
 
       let res;
       if (form.leaveId) {
-        res = await axios.put(`http://localhost:3001/leave/${form.leaveId}`, formData, {
+        res = await axios.put(`https://hrms-project-1-eca3.onrender.com
+/leave/${form.leaveId}`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
       } else {
-        res = await axios.post("http://localhost:3001/leave/apply", formData, {
+        res = await axios.post("https://hrms-project-1-eca3.onrender.com/leave/apply", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
       }

@@ -25,7 +25,7 @@ const ApplyLeave = () => {
     const fetchUserLeaves = async () => {
       try {
         const userId = localStorage.getItem("userId");
-        const res = await axios.get(`http://localhost:3001/leave/user/${userId}`);
+        const res = await axios.get(`https://hrms-project-1-eca3.onrender.com/leave/user/${userId}`);
         if (isMounted) {
           const uniqueLeaves = Array.from(
             new Map(res.data.map(l => [l._id, l])).values()
@@ -90,7 +90,8 @@ const ApplyLeave = () => {
     if (!window.confirm("Are you sure you want to delete this leave?")) return;
 
     try {
-      await axios.delete(`http://localhost:3001/leave/${leaveId}`);
+      await axios.delete(`https://hrms-project-1-eca3.onrender.com
+/leave/${leaveId}`);
       socket.emit("leaveDeleted", { id: leaveId }); // emit deletion
     } catch (err) {
       console.error("Delete error:", err);

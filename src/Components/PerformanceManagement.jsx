@@ -29,7 +29,8 @@ const PerformanceManagement = ({ onUpdate, initialTab = "overview", hideTabs = f
       return;
     }
 
-    await axios.put(`http://localhost:3001/targets/${target._id}/progress`, {
+    await axios.put(`https://hrms-project-1-eca3.onrender.com
+/targets/${target._id}/progress`, {
       progress: progressNum,
     });
 
@@ -64,7 +65,8 @@ const handleApprove = async (target) => {
     const managerRemarks = prompt("Enter remarks (optional)", "");
     const rating = prompt("Enter rating (0-100)", "100");
 
-    await axios.put(`http://localhost:3001/targets/${target._id}/approve`, {
+    await axios.put(`https://hrms-project-1-eca3.onrender.com
+/targets/${target._id}/approve`, {
       managerRemarks,
       rating: Number(rating),
     });
@@ -86,7 +88,7 @@ const handleApprove = async (target) => {
   // ------------------ FETCH TARGETS ------------------
   const fetchTargets = async () => {
     try {
-      const url = "http://localhost:3001/targets";
+      const url = "https://hrms-project-1-eca3.onrender.com/targets";
       console.log("[DEBUG] Fetching targets from URL:", url);
       const res = await axios.get(url);
       console.log("[DEBUG] Targets fetched successfully:", res.data);
@@ -99,7 +101,7 @@ const handleApprove = async (target) => {
   // ------------------ FETCH EMPLOYEES ------------------
   const fetchEmployees = async () => {
     try {
-      const url = "http://localhost:3001/employees";
+      const url = "https://hrms-project-1-eca3.onrender.com/employees";
       console.log("[DEBUG] Fetching employees from URL:", url);
       const res = await axios.get(url);
       console.log("[DEBUG] Employees fetched successfully:", res.data);
@@ -151,7 +153,7 @@ const handleApprove = async (target) => {
       const payload = { ...newTarget, kpiWeight: Number(newTarget.kpiWeight), employees: [newTarget.employee] };
       console.log("[DEBUG] Submitting new target payload:", payload);
 
-      const res = await axios.post("http://localhost:3001/targets", payload);
+      const res = await axios.post("https://hrms-project-1-eca3.onrender.com/targets", payload);
       console.log("[DEBUG] Target submitted successfully:", res.data);
 
       // Reset form

@@ -16,7 +16,7 @@ const UserMeetings = () => {
   }, []);
 
   const fetchMeetings = async () => {
-    const res = await axios.get("http://localhost:3001/api/meetings");
+    const res = await axios.get("https://hrms-project-1-eca3.onrender.com/api/meetings");
     setMeetings(res.data);
   };
 
