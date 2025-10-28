@@ -5,8 +5,7 @@ const ResignationList = () => {
   const [resignations, setResignations] = useState([]);
 
   const fetchResignations = async () => {
-    const res = await axios.get("https://hrms-project-1-eca3.onrender.com
-/api/resignations/all");
+    const res = await axios.get("https://hrms-project-1-eca3.onrender.com/api/resignations/all");
     setResignations(res.data);
   };
 

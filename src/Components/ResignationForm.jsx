@@ -40,8 +40,7 @@ const ResignationForm = ({ employeeId }) => {
     console.log("[DEBUG] Submitting resignation:", { employeeId, reason, lastWorkingDay });
 
     try {
-      const res = await axios.post("https://hrms-project-1-eca3.onrender.com
-/api/resignations/apply", {
+      const res = await axios.post("https://hrms-project-1-eca3.onrender.com/api/resignations/apply", {
         employeeId,
         reason,
         lastWorkingDay,

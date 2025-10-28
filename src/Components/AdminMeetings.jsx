@@ -20,8 +20,7 @@ const AdminMeetings = ({ activeSubmenu = "Meeting", setActiveSection }) => {
   const fetchMeetings = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("https://hrms-project-1-eca3.onrender.com
-/api/meetings");
+      const res = await axios.get("https://hrms-project-1-eca3.onrender.com/api/meetings");
       setMeetings(res.data || []);
     } catch (err) {
       console.error("Fetch meetings error:", err);
@@ -68,8 +67,7 @@ const AdminMeetings = ({ activeSubmenu = "Meeting", setActiveSection }) => {
       if (form._id) {
         // Update meeting
         res = await axios.put(
-          `https://hrms-project-1-eca3.onrender.com
-/api/meetings/${form._id}`,
+          `https://hrms-project-1-eca3.onrender.com/api/meetings/${form._id}`,
           form
         );
         setMeetings((prev) =>
@@ -77,8 +75,7 @@ const AdminMeetings = ({ activeSubmenu = "Meeting", setActiveSection }) => {
         );
       } else {
         // Create new meeting
-        res = await axios.post("https://hrms-project-1-eca3.onrender.com
-/api/meetings", form);
+        res = await axios.post("https://hrms-project-1-eca3.onrender.com/api/meetings", form);
         setMeetings((prev) => [...prev, res.data]);
         try {
           socket.emit("newMeeting", res.data);

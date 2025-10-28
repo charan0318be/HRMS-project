@@ -21,8 +21,7 @@ const Login = () => {
  const handleSubmit = async (e) => {
   e.preventDefault();
   try {
-    const response = await axios.post('https://hrms-project-1-eca3.onrender.com
-/login', formdata);
+    const response = await axios.post('https://hrms-project-1-eca3.onrender.com/login', formdata);
     const data = response.data;
 
     console.log("Login response:", data); // ADD THIS

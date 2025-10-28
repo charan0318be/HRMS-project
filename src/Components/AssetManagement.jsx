@@ -26,8 +26,7 @@ const AssetManagement = ({ isAdmin = true, activeTab, currentUserId }) => {
   const fetchAssets = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("https://hrms-project-1-eca3.onrender.com
-/api/assets");
+      const res = await axios.get("https://hrms-project-1-eca3.onrender.com/api/assets");
       let allAssets = res.data;
       console.log("[DEBUG] All fetched assets:", allAssets);
 
@@ -46,8 +45,7 @@ const AssetManagement = ({ isAdmin = true, activeTab, currentUserId }) => {
 
   const fetchEmployees = async () => {
     try {
-      const res = await axios.get("https://hrms-project-1-eca3.onrender.com
-/api/employees");
+      const res = await axios.get("https://hrms-project-1-eca3.onrender.com/api/employees");
       console.log("[DEBUG] Fetched employees:", res.data);
       setEmployees(res.data);
     } catch (err) {
@@ -115,8 +113,7 @@ const AssetManagement = ({ isAdmin = true, activeTab, currentUserId }) => {
 
     try {
       if (modalType === "add") {
-        await axios.post("https://hrms-project-1-eca3.onrender.com
-/api/assets/add", payload);
+        await axios.post("https://hrms-project-1-eca3.onrender.com/api/assets/add", payload);
       } else if (modalType === "edit" && currentAsset?._id) {
         await axios.put(
           `https://hrms-project-1-eca3.onrender.com
@@ -147,8 +144,7 @@ const AssetManagement = ({ isAdmin = true, activeTab, currentUserId }) => {
   const handleDelete = async (assetId) => {
     if (!window.confirm("Are you sure you want to delete this asset?")) return;
     try {
-      await axios.delete(`https://hrms-project-1-eca3.onrender.com
-/api/assets/${assetId}`);
+      await axios.delete(`https://hrms-project-1-eca3.onrender.com/api/assets/${assetId}`);
       fetchAssets();
     } catch (err) {
       console.error("[ERROR] Delete failed:", err);
